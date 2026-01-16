@@ -1,0 +1,36 @@
+import feedparser
+import requests
+import os
+
+# إعدادات الأمان (سنجلب الرابط من إعدادات جيت هاب)
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK')
+
+# رابط مراقبة حساب FUTBIN
+RSS_URL = 'https://rssbridge.org/bridge01/?action=display&bridge=TwitterBridge&context=By+screen+name&u=FUTBIN&format=Atom'
+
+def send_to_discord(content):
+    if not DISCORD_WEBHOOK_URL:
+        print("خطأ: لم يتم العثور على رابط الـ Webhook")
+        return
+    data = {"content": content}
+    requests.post(DISCORD_WEBHOOK_URL, json=data)
+
+def run_bot():
+    print("جاري فحص المحتوى الجديد...")
+    feed = feedparser.parse(RSS_URL)
+    
+    if feed.entries:
+        # نأخذ آخر منشور فقط
+        latest_entry = feed.entries[0]
+        title = latest_entry.title
+        link = latest_entry.link
+        
+        # رسالة المحتوى
+        message = f"📢 **محتوى جديد نزل في التمت تيم!**\n\n🔗 {link}"
+        
+        # إرسال للديسكورد
+        send_to_discord(message)
+        print(f"تم الإرسال: {title}")
+
+if __name__ == "__main__":
+    run_bot()
